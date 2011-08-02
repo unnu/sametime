@@ -11,6 +11,7 @@ module Sametime
       @base = base
       @id = data['id']
       @map = {}
+      @handler = {}
     end
   
     def join
@@ -40,7 +41,23 @@ module Sametime
     def chat
       @map['meetings.map.messages'] ||= Chat.new(self)
     end
-  
+    
+    def notify(type, object)
+      @handler[type] && @handler[type].each { |block| block.call(object) }
+    end
+    
+    def on(type, &block)
+      handler_array = @handler[type] ||= []
+      handler_array << block
+    end
+    
+    def listen
+      join
+      while true
+        receive
+      end
+    end
+    
     private
   
       def handle_packets(packets)

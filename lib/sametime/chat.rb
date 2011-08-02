@@ -19,6 +19,7 @@ module Sametime
       case packet['op']
       when 'change'
         message = @messages[packet['key']] = Message.new(packet['value'])
+        @room.notify(:chat_message, message)
       else
         puts "Unknow chat operation: #{packet}"
       end
