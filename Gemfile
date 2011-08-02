@@ -1,5 +1,5 @@
 source :rubygems
 
 gem 'httparty'
-gem 'crack'
+gem 'crack', :git => 'https://github.com/sspinc/crack.git'
 gem 'activesupport'

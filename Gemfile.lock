@@ -1,8 +1,13 @@
+GIT
+  remote: https://github.com/sspinc/crack.git
+  revision: 510f25d0e4776919d7cb30d42adfd5a883a844f3
+  specs:
+    crack (0.1.8)
+
 GEM
   remote: http://rubygems.org/
   specs:
     activesupport (3.0.9)
-    crack (0.1.8)
     httparty (0.7.8)
       crack (= 0.1.8)
 
@@ -11,5 +16,5 @@ PLATFORMS
 
 DEPENDENCIES
   activesupport
-  crack
+  crack!
   httparty
