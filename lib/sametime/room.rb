@@ -4,7 +4,7 @@ module Sametime
     no_follow true
     base_uri 'http://foresee.dyndns.biz/rtc'
   
-    attr_reader :base
+    attr_reader :base, :id, :nonce
   
     def initialize(base, data)
       self.class.default_cookies.add_cookies(base.class.default_cookies.to_cookie_string)
@@ -12,6 +12,7 @@ module Sametime
       @id = data['id']
       @map = {}
       @handler = {}
+      @nonce = nil
     end
   
     def join
@@ -20,14 +21,14 @@ module Sametime
         userName: @base.email,
         method: 'put'
       })
+      @nonce = response['Rtc4web-Nonce']
       self.class.default_cookies.add_cookies(response.response['set-cookie'])
     end
   
     def receive
-      response = self.class.get('/RTCServlet', :query => {format: 'json'}).parsed_response
-      if response
-        handle_packets(response)
-      end
+      response_object = self.class.get('/RTCServlet', :query => {format: 'json'})
+      response = response_object.parsed_response
+      handle_packets(response) if response
     end
   
     def send(cn, key, value)
@@ -42,19 +43,46 @@ module Sametime
       @map['meetings.map.messages'] ||= Chat.new(self)
     end
     
-    def notify(type, object)
-      @handler[type] && @handler[type].each { |block| block.call(object) }
+    def library
+      @map['meetings.map.documents'] ||= Library.new(self)
     end
     
-    def on(type, &block)
-      handler_array = @handler[type] ||= []
-      handler_array << block
+    def projector
+      @map['meetings.map.projector']
+    end
+    
+    def projector_receive(packet)
+      case packet['op']
+      when 'change'
+        projector = (@map['meetings.map.projector'] ||= Projector.new(self))
+        projector.attributes = (packet['value'])
+        notify(:projector_changed, projector)
+      when 'remove'
+        projector = @map.delete('meetings.map.projector')
+        notify(:projector_removed, projector)
+      else
+        puts "Unknow projector operation: #{packet}"
+      end
+    end
+    
+    def notify(types, object)
+      (Array(types) << :all).each do |type|
+        (@handler[type] || []).each { |block| block.call(object, types) }
+      end
+    end
+    
+    def on(*types, &block)
+      types.each do |type|
+        (@handler[type] ||= []) << block
+      end
     end
     
     def listen
       join
-      while true
-        receive
+      http = Thread.start do
+        while true
+          receive
+        end
       end
     end
     
@@ -65,10 +93,16 @@ module Sametime
           case packet['cn']
           when 'meetings.map.messages'
             chat.receive(packet)
+          when 'meetings.map.documents', 'meetings.map.urls'
+            library.receive(packet)
+          when 'meetings.map.projector'
+            projector_receive(packet)
           else
             puts "Unknow packet: #{packet}"
           end
         end
+        
+        puts "Unknow packet: #{packets['truncated']}"
       end
   end
 end

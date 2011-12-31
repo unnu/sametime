@@ -15,7 +15,7 @@ module Sametime
         loginType: 'authenticated',
         j_username: @username,
         j_password: @password,
-        loginId: 'guest/0011',
+        #loginId: 'guest/0011',
         displayName: '',
         rememberDisplayName: 'on'
       })

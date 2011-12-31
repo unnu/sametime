@@ -1,0 +1,23 @@
+#! /usr/bin/env ruby
+require File.expand_path('../../lib/sametime', __FILE__)
+
+command, val1, val2 = ARGV
+
+@sametime = Sametime::Base.new('Test User1', 'Passw0rd', 'Test.User1@demo.com')
+@sametime.login
+
+@room = @sametime.rooms.first
+@room.on :all do |message, type|
+  p [type, message]
+end
+listen_thread = @room.listen
+sleep 1
+
+case command
+when "listen"
+  listen_thread.join
+when "document"
+  @room.library.documents[val1].__send__(val2)
+else
+  @room.__send__(command).__send__(val1, *[val2].compact)
+end

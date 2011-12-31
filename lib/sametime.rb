@@ -1,6 +1,7 @@
 require "rubygems"
 require "bundler/setup"
 require "httparty"
+require "httmultiparty"
 require "active_support/ordered_hash"
 require "active_support/json"
 
@@ -14,6 +15,11 @@ module Sametime
   end
 end
 
+require 'sametime/map'
 require 'sametime/base'
-require 'sametime/room'
+require 'sametime/document'
+require 'sametime/url'
+require 'sametime/library'
 require 'sametime/chat'
+require 'sametime/projector'
+require 'sametime/room'
